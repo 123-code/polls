@@ -4,6 +4,7 @@ package main
 import (
     "fmt"
     "strconv"
+	"pollsbackend/util"
 )
 
 func ValidateID(id uint) {
@@ -85,7 +86,7 @@ func ValidateID(id uint) {
 
 
 func main(){
-	ValidateID(1803047263)
+	util.CreateWallet("1803047263")
 }
 
 /*package main
