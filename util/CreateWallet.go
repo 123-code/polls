@@ -3,20 +3,20 @@ package util
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"math/big"
 	"net/http"
 	"strings"
+
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/rpc"
-
-	"github.com/ethereum/go-ethereum/common"
-
 )
 
 type WalletFactory struct{
@@ -63,19 +63,34 @@ return parsedABI,nil
     return &WalletFactory{abi: parsedABI, address: address, backend: backend}, nil
 }
 func (w *WalletFactory) CreateWallet(opts *bind.TransactOpts, userId string) (*types.Transaction, error) {
+    if opts == nil {
+        return nil, errors.New("transaction options are nil")
+    }
+    
+    if opts.Nonce == nil {
+        nonce, err := w.backend.PendingNonceAt(context.Background(), opts.From)
+        if err != nil {
+            return nil, fmt.Errorf("failed to retrieve nonce: %v", err)
+        }
+        opts.Nonce = big.NewInt(int64(nonce))
+    }
+
     data, err := w.abi.Pack("createWallet", userId)
     if err != nil {
         return nil, err
     }
+    
     tx := types.NewTransaction(opts.Nonce.Uint64(), w.address, opts.Value, opts.GasLimit, opts.GasPrice, data)
     signedTx, err := opts.Signer(opts.From, tx)
     if err != nil {
         return nil, err
     }
+    
     err = w.backend.SendTransaction(context.Background(), signedTx)
     if err != nil {
         return nil, err
     }
+    
     return signedTx, nil
 }
 
@@ -113,28 +128,28 @@ func CreateWallet(userID string) (string, error) {
         fmt.Println("error",err)
         return "", fmt.Errorf("failed to connect to the Ethereum client: %v", err)
     }
-
-    // Create an ethclient.Client with the rpc.Client
+//0x141920D050A904B6e3feDd732200fbF9B1f0b65A
+//6476049119d25379b9cd234d390c757db268cac2729d54c19c6d1b884a9da5e9
     client := ethclient.NewClient(rpcClient)
 
-    // Load your private key
-    privateKey, err := crypto.HexToECDSA("your_private_key_hex")
+
+    privateKey, err := crypto.HexToECDSA("6476049119d25379b9cd234d390c757db268cac2729d54c19c6d1b884a9da5e9")
     if err != nil {
-        fmt.Println("error",err)
+        fmt.Println("error loading private key",err)
         return "", fmt.Errorf("failed to load private key: %v", err)
     }
 
     // Create an authorized transactor
     auth, err := bind.NewKeyedTransactorWithChainID(privateKey, big.NewInt(11155111)) // 11155111 is the chain ID for Sepolia
     if err != nil {
-        fmt.Println("error",err)
+        fmt.Println("error transactor",err)
         return "", fmt.Errorf("failed to create authorized transactor: %v", err)
     }
 
     // Set gas price and limit
     gasPrice, err := client.SuggestGasPrice(context.Background())
     if err != nil {
-        fmt.Println("error",err)
+        fmt.Println("error suggesting gas price",err)
         return "", fmt.Errorf("failed to suggest gas price: %v", err)
     }
     auth.GasPrice = gasPrice
@@ -144,27 +159,27 @@ func CreateWallet(userID string) (string, error) {
     factoryAddress := common.HexToAddress("YOUR_WALLET_FACTORY_CONTRACT_ADDRESS")
     factory, err := NewWalletFactory(factoryAddress, client)
     if err != nil {
-        fmt.Println("error",err)
+        fmt.Println("error with wallet contract",err)
         return "", fmt.Errorf("failed to load WalletFactory contract: %v", err)
     }
 
     // Call the createWallet function
     tx, err := factory.CreateWallet(auth, userID)
     if err != nil {
-        fmt.Println("error",err)
+        fmt.Println("error creating wallet",err)
         return "", fmt.Errorf("failed to create wallet: %v", err)
     }
 
     // Wait for the transaction to be mined
     receipt, err := bind.WaitMined(context.Background(), client, tx)
     if err != nil {
-        fmt.Println("error",err)
+        fmt.Println("error mining transaction",err)
         return "", fmt.Errorf("failed to wait for transaction to be mined: %v", err)
     }
     // Get the wallet address from the event logs
     event, err := factory.ParseWalletCreated(*receipt.Logs[0])
     if err != nil {
-        fmt.Println("error",err)
+        fmt.Println("error parsing",err)
         return "", fmt.Errorf("failed to parse WalletCreated event: %v", err)
     }
 
