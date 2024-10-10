@@ -38,6 +38,7 @@ var jsonABI map[string]interface{}
 
 err = json.Unmarshal(abiFile,&jsonABI)
 if err != nil {
+    fmt.Println("error de parsing abi",err)
     return abi.ABI{}, fmt.Errorf("failed to parse ABI JSON: %v", err)
 }
 
@@ -48,6 +49,7 @@ if err != nil{
 }
 parsedABI,err := abi.JSON(strings.NewReader(string(abiJSON)))
 if err != nil {
+    fmt.Println("error de parsing",err)
     return abi.ABI{}, fmt.Errorf("failed to parse ABI: %v", err)
 }
 return parsedABI,nil
@@ -58,18 +60,21 @@ return parsedABI,nil
  func NewWalletFactory(address common.Address, backend bind.ContractBackend) (*WalletFactory, error) {
     parsedABI, err := loadABI("constants/walletfactoryABI.json")
     if err != nil {
+        fmt.Println(err)
         return nil, err
     }
     return &WalletFactory{abi: parsedABI, address: address, backend: backend}, nil
 }
 func (w *WalletFactory) CreateWallet(opts *bind.TransactOpts, userId string) (*types.Transaction, error) {
     if opts == nil {
+        fmt.Println("transaction options are nil")
         return nil, errors.New("transaction options are nil")
     }
     
     if opts.Nonce == nil {
         nonce, err := w.backend.PendingNonceAt(context.Background(), opts.From)
         if err != nil {
+            fmt.Println(err)
             return nil, fmt.Errorf("failed to retrieve nonce: %v", err)
         }
         opts.Nonce = big.NewInt(int64(nonce))
@@ -77,19 +82,23 @@ func (w *WalletFactory) CreateWallet(opts *bind.TransactOpts, userId string) (*t
 
     data, err := w.abi.Pack("createWallet", userId)
     if err != nil {
+        fmt.Println(err)
         return nil, err
     }
     
     tx := types.NewTransaction(opts.Nonce.Uint64(), w.address, opts.Value, opts.GasLimit, opts.GasPrice, data)
     signedTx, err := opts.Signer(opts.From, tx)
     if err != nil {
+        fmt.Println(err)
         return nil, err
     }
     
     err = w.backend.SendTransaction(context.Background(), signedTx)
     if err != nil {
+        fmt.Println(err)
         return nil, err
     }
+    
     
     return signedTx, nil
 }
@@ -104,6 +113,7 @@ func (w *WalletFactory) ParseWalletCreated(log types.Log) (struct {
     }{}
     err := w.abi.UnpackIntoInterface(&event, "WalletCreated", log.Data)
     if err != nil {
+        fmt.Println(err)
         return event, err
     }
     return event, nil
@@ -114,7 +124,7 @@ func (w *WalletFactory) ParseWalletCreated(log types.Log) (struct {
 func CreateWallet(userID string) (string, error) {
     // Create a custom HTTP client
     httpClient := &http.Client{}
-    
+    fmt.Println("llego")
     // Create a custom HTTP RoundTripper
     customTransport := &customTransport{
         underlying: http.DefaultTransport,
@@ -123,7 +133,7 @@ func CreateWallet(userID string) (string, error) {
     httpClient.Transport = customTransport
 
     // Create an rpc.Client with the custom HTTP client
-    rpcClient, err := rpc.DialHTTPWithClient("https://ethereum-sepolia.gateway.tatum.io/", httpClient)
+    rpcClient, err := rpc.DialHTTPWithClient("http://127.0.0.1:8545", httpClient)
     if err != nil {
         fmt.Println("error",err)
         return "", fmt.Errorf("failed to connect to the Ethereum client: %v", err)
@@ -133,14 +143,14 @@ func CreateWallet(userID string) (string, error) {
     client := ethclient.NewClient(rpcClient)
 
 
-    privateKey, err := crypto.HexToECDSA("6476049119d25379b9cd234d390c757db268cac2729d54c19c6d1b884a9da5e9")
+    privateKey, err := crypto.HexToECDSA("ac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80")
     if err != nil {
         fmt.Println("error loading private key",err)
         return "", fmt.Errorf("failed to load private key: %v", err)
     }
 
     // Create an authorized transactor
-    auth, err := bind.NewKeyedTransactorWithChainID(privateKey, big.NewInt(11155111)) // 11155111 is the chain ID for Sepolia
+    auth, err := bind.NewKeyedTransactorWithChainID(privateKey, big.NewInt(31337)) // 11155111 is the chain ID for Sepolia
     if err != nil {
         fmt.Println("error transactor",err)
         return "", fmt.Errorf("failed to create authorized transactor: %v", err)
@@ -156,7 +166,7 @@ func CreateWallet(userID string) (string, error) {
     auth.GasLimit = uint64(3000000) // Adjust as needed
 
     // Load the WalletFactory contract
-    factoryAddress := common.HexToAddress("YOUR_WALLET_FACTORY_CONTRACT_ADDRESS")
+    factoryAddress := common.HexToAddress("0x5FbDB2315678afecb367f032d93F642f64180aa3")
     factory, err := NewWalletFactory(factoryAddress, client)
     if err != nil {
         fmt.Println("error with wallet contract",err)
@@ -176,12 +186,20 @@ func CreateWallet(userID string) (string, error) {
         fmt.Println("error mining transaction",err)
         return "", fmt.Errorf("failed to wait for transaction to be mined: %v", err)
     }
+
+
     // Get the wallet address from the event logs
     event, err := factory.ParseWalletCreated(*receipt.Logs[0])
     if err != nil {
         fmt.Println("error parsing",err)
         return "", fmt.Errorf("failed to parse WalletCreated event: %v", err)
     }
+
+    if receipt.Status == 0 {
+        fmt.Println("transaction failed")
+        return "", fmt.Errorf("transaction failed")
+    }
+    fmt.Printf("Transaction receipt: %+v\n", receipt)
 
     return event.WalletAddress.Hex(), nil
 }

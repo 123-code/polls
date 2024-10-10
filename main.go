@@ -93,13 +93,14 @@ func ValidateID(id uint) {
 package main
 
 import (
-	"fmt"
-	"github.com/gin-contrib/cors"
+	//"fmt"
+	//"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"gorm.io/driver/postgres"
+	//"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"net/http"
-	"net/url"
+	//"net/url"
+	"pollsbackend/util"
 
 )
 
@@ -111,7 +112,7 @@ type User struct {
 
 var DB *gorm.DB
 
-func init() {
+/*func init() {
 	var err error
 	encodedPassword := url.QueryEscape("AVNS_LNgImquHJXNIMn4aMTt")
 
@@ -123,10 +124,11 @@ func init() {
 
 	DB.AutoMigrate(&User{})
 }
+*/
 
 func main() {
 	// Las variables de entorno ya están configuradas, no es necesario volver a establecerlas aquí
-
+/*
 	config := cors.DefaultConfig()
 	config.AllowOrigins = []string{
 		"http://localhost:3000",
@@ -149,6 +151,10 @@ func main() {
 	r.DELETE("/users/:id", deleteUser)
 
 	r.Run(":8080")
+	*/
+	//util.CreateWallet("1804072310")
+	util.VerifyContract()
+	//util.ValidataWallet()
 }
 
 func createUser(c *gin.Context) {
@@ -207,3 +213,4 @@ func deleteUser(c *gin.Context) {
 	DB.Delete(&user)
 	c.JSON(http.StatusOK, gin.H{"message": "User deleted successfully"})
 }
+
