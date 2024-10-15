@@ -16,7 +16,6 @@ contract MyToken is ERC721URIStorage {
 
     event Burned(address indexed owner, uint256 indexed tokenId);
 
-
     function mint(address _to) public returns (uint256) {
         uint256 newItemID = _nextTokenId; 
         _mint(_to, newItemID);

@@ -152,8 +152,8 @@ func main() {
 
 	r.Run(":8080")
 	*/
-	//util.CreateWallet("1804072310")
-	util.VerifyContract()
+	util.CreateWallet("1804072310")
+	//util.VerifyContract()
 	//util.ValidataWallet()
 }
 

@@ -28,37 +28,42 @@ type WalletFactory struct{
 
 
 
- func loadABI(filepath string)(abi.ABI,error){
-abiFile,err := ioutil.ReadFile(filepath)
-if err != nil{
-    fmt.Println("error",err);
-    return abi.ABI{}, fmt.Errorf("failed to read ABI file: %v", err)
-} 
-var jsonABI map[string]interface{}
+func loadABI(filepath string) (abi.ABI, error) {
+    abiFile, err := ioutil.ReadFile(filepath)
+    if err != nil {
+        fmt.Println("error reading ABI file:", err)
+        return abi.ABI{}, fmt.Errorf("failed to read ABI file: %v", err)
+    }
 
-err = json.Unmarshal(abiFile,&jsonABI)
-if err != nil {
-    fmt.Println("error de parsing abi",err)
-    return abi.ABI{}, fmt.Errorf("failed to parse ABI JSON: %v", err)
-}
+    // Unmarshal directly into a []map[string]interface{} to match the expected ABI structure
+    var jsonABI []interface{}
+    err = json.Unmarshal(abiFile, &jsonABI)
+    if err != nil {
+        fmt.Println("error parsing ABI:", err)
+        return abi.ABI{}, fmt.Errorf("failed to parse ABI JSON: %v", err)
+    }
 
-abiJSON,err := json.Marshal(jsonABI["abi"])
-if err != nil{
-    fmt.Println(err)
-    return abi.ABI{},fmt.Errorf("error")
+    // Re-marshal the JSON ABI array back to a string for parsing with abi.JSON
+    abiJSON, err := json.Marshal(jsonABI)
+    if err != nil {
+        fmt.Println("error re-marshaling ABI:", err)
+        return abi.ABI{}, fmt.Errorf("failed to marshal ABI: %v", err)
+    }
+
+    // Parse the ABI using the go-ethereum abi.JSON method
+    parsedABI, err := abi.JSON(strings.NewReader(string(abiJSON)))
+    if err != nil {
+        fmt.Println("error parsing ABI:", err)
+        return abi.ABI{}, fmt.Errorf("failed to parse ABI: %v", err)
+    }
+
+    return parsedABI, nil
 }
-parsedABI,err := abi.JSON(strings.NewReader(string(abiJSON)))
-if err != nil {
-    fmt.Println("error de parsing",err)
-    return abi.ABI{}, fmt.Errorf("failed to parse ABI: %v", err)
-}
-return parsedABI,nil
- }
 
 
 
  func NewWalletFactory(address common.Address, backend bind.ContractBackend) (*WalletFactory, error) {
-    parsedABI, err := loadABI("constants/walletfactoryABI.json")
+    parsedABI, err := loadABI("/Users/joseignacionaranjo/Polls_backend/util/walletfactory.json")
     if err != nil {
         fmt.Println(err)
         return nil, err
@@ -133,7 +138,7 @@ func CreateWallet(userID string) (string, error) {
     httpClient.Transport = customTransport
 
     // Create an rpc.Client with the custom HTTP client
-    rpcClient, err := rpc.DialHTTPWithClient("http://127.0.0.1:8545", httpClient)
+    rpcClient, err := rpc.DialHTTPWithClient("https://sepolia.infura.io/v3/682c39bac1294baeb74ae767786db1ca", httpClient)
     if err != nil {
         fmt.Println("error",err)
         return "", fmt.Errorf("failed to connect to the Ethereum client: %v", err)
@@ -143,7 +148,7 @@ func CreateWallet(userID string) (string, error) {
     client := ethclient.NewClient(rpcClient)
 
 
-    privateKey, err := crypto.HexToECDSA("ac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80")
+    privateKey, err := crypto.HexToECDSA("526938daf3a62f82fc13d7abe8d063104160bfd869ddbc25e3feb6a2f8a8042e")
     if err != nil {
         fmt.Println("error loading private key",err)
         return "", fmt.Errorf("failed to load private key: %v", err)
@@ -166,7 +171,7 @@ func CreateWallet(userID string) (string, error) {
     auth.GasLimit = uint64(3000000) // Adjust as needed
 
     // Load the WalletFactory contract
-    factoryAddress := common.HexToAddress("0x5FbDB2315678afecb367f032d93F642f64180aa3")
+    factoryAddress := common.HexToAddress("0x84Eb5C50Fcd8d6F2eeBDb929381af5AC4e80321c")
     factory, err := NewWalletFactory(factoryAddress, client)
     if err != nil {
         fmt.Println("error with wallet contract",err)
