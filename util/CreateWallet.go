@@ -124,7 +124,7 @@ func (w *WalletFactory) ParseWalletCreated(log types.Log) (struct {
     return event, nil
 }
 
-
+//auth
 
 func CreateWallet(userID string) (string, error) {
     // Create a custom HTTP client
@@ -155,7 +155,7 @@ func CreateWallet(userID string) (string, error) {
     }
 
     // Create an authorized transactor
-    auth, err := bind.NewKeyedTransactorWithChainID(privateKey, big.NewInt(31337)) // 11155111 is the chain ID for Sepolia
+    auth, err := bind.NewKeyedTransactorWithChainID(privateKey, big.NewInt(11155111)) // 11155111 is the chain ID for Sepolia
     if err != nil {
         fmt.Println("error transactor",err)
         return "", fmt.Errorf("failed to create authorized transactor: %v", err)
