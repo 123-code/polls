@@ -2,100 +2,94 @@ package util
 
 import (
 	"context"
-	"crypto/ecdsa"
 	"fmt"
 	"log"
 	"math/big"
-	"os"
-	"strings"
 
-	"github.com/ethereum/go-ethereum/accounts/abi"
+	"pollsbackend/bindings"
+
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
+
+	//"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 )
 
-func VerifyContract() {
-	const contractAddress = "0x09cE5cC3737C7a6F2745FE39a75e9397cB68C666"
-	const owneraddress = "0x141920D050A904B6e3feDd732200fbF9B1f0b65A"
-	const nftcontractaddress = "0xF554f9646581F79aF174F144Ea4De42AE13AF9c1"
-
+func ValidateWallet(){
+	userID:="1804072310"
 	client, err := ethclient.Dial("https://sepolia.infura.io/v3/682c39bac1294baeb74ae767786db1ca")
-	if err != nil {
-		log.Fatalf("Error al conectar a la red: %v", err)
-	}
-	defer client.Close()
-
-	fmt.Println("Conectado a la red Sepolia")
-
-	abiFile, err := os.ReadFile("/Users/joseignacionaranjo/Polls_backend/util/wallet.json")
-	if err != nil {
-		log.Fatalf("Error al leer el archivo ABI: %v", err)
-	}
-
-	parsedABI, err := abi.JSON(strings.NewReader(string(abiFile)))
-	if err != nil {
-		log.Fatalf("Error al parsear el ABI: %v", err)
-	}
-	fmt.Println("ABI parseado:", parsedABI)
-
-	contract := common.HexToAddress(contractAddress)
-	fmt.Printf("Interacción con contrato en: %s\n", contract.Hex())
-
-	// Convertimos las direcciones a common.Address
-	owner := common.HexToAddress(owneraddress)
-	nftContract := common.HexToAddress(nftcontractaddress)
-
-	
-	data, err := parsedABI.Pack("initialize", owner, nftContract)
-	if err != nil {
-		log.Fatalf("Error al empaquetar la llamada a la función initialize: %v", err)
-	}
-	fmt.Println("Datos empaquetados:", data)
-
-	nftdata, err := parsedABI.Pack("mintNFT")
-	if err != nil {
-		log.Fatalf("Error al empaquetar la llamada a la función initialize: %v", err)
-	}
-	fmt.Println("Datos empaquetados:", nftdata)
-
-	privateKey, err := crypto.HexToECDSA("6476049119d25379b9cd234d390c757db268cac2729d54c19c6d1b884a9da5e9")
     if err != nil {
-        log.Fatalf("Error al convertir la clave privada: %v", err)
-    }
-	publicKey := privateKey.Public()
-    publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
-    if !ok {
-        log.Fatal("Error al convertir la clave pública")
+		fmt.Println(err)
+        log.Fatal(err)
     }
 
-	fromAddress := crypto.PubkeyToAddress(*publicKeyECDSA)
-    nonce, err := client.PendingNonceAt(context.Background(), fromAddress)
+	contractAddress := common.HexToAddress("0x84Eb5C50Fcd8d6F2eeBDb929381af5AC4e80321c")
+    instance, err := bindings.NewWallet(contractAddress, client)
     if err != nil {
-        log.Fatalf("Error al obtener el nonce: %v", err)
+		fmt.Println(err)
+        log.Fatal(err)
     }
 
-	gasPrice := big.NewInt(1000000000) 
+	callOpts := &bind.CallOpts{
+		Context: context.Background(),
+	}
+	walletAddress, err := instance.UserWallets(callOpts, userID)
+	if err != nil {
+		fmt.Println(err)
+		log.Fatalf("Failed to query userWallets: %v", err)
+	}
+	if walletAddress == (common.Address{}) {
+		fmt.Printf("No wallet found for user: %s\n", userID)
+	} else {
+		fmt.Printf("Wallet address for user %s: %s\n", userID, walletAddress.Hex())
+	}
 
-	tx := types.NewTransaction(nonce, contract, big.NewInt(0), uint64(21788), gasPrice, nftdata)
+} 
 
-    chainID, err := client.NetworkID(context.Background())
+func InitializeUserWallet(ownerAddress string, nftContractAddress string) error {
+
+    client, err := ethclient.Dial("https://sepolia.infura.io/v3/682c39bac1294baeb74ae767786db1ca")
     if err != nil {
-        log.Fatalf("Error al obtener el ID de la red: %v", err)
+		fmt.Println(err)
+        return fmt.Errorf("failed to connect to the Ethereum client: %v", err)
     }
 
-    signedTx, err := types.SignTx(tx, types.NewEIP155Signer(chainID), privateKey)
+    privateKey, err := crypto.HexToECDSA("526938daf3a62f82fc13d7abe8d063104160bfd869ddbc25e3feb6a2f8a8042e")
     if err != nil {
-        log.Fatalf("Error al firmar la transacción: %v", err)
+		fmt.Println(err)
+        return fmt.Errorf("failed to convert hex to ECDSA: %v", err)
     }
 
-    err = client.SendTransaction(context.Background(), signedTx)
+
+    contractAddress := common.HexToAddress("0x858581A5c619bA15f21C23598aB74e1e317ABECc")
+
+    auth, err := bind.NewKeyedTransactorWithChainID(privateKey, big.NewInt(11155111))
     if err != nil {
-        log.Fatalf("Error al enviar la transacción: %v", err)
+		fmt.Println(err)
+        return fmt.Errorf("failed to create authorized transactor: %v", err)
     }
 
-	fmt.Printf("Transacción enviada: %s\n", signedTx.Hash().Hex())
+
+    walletInstance, err := bindings.NewWalletImplementation1(contractAddress, client)
+    if err != nil {
+		fmt.Println(err)
+        return fmt.Errorf("failed to instantiate contract: %v", err)
+    }
 
 
+    owner := common.HexToAddress(ownerAddress)
+    nftContract := common.HexToAddress(nftContractAddress)
+
+
+    tx, err := walletInstance.Initialize(auth, owner, nftContract)
+    if err != nil {
+		fmt.Println(err)
+        return fmt.Errorf("failed to initialize wallet: %v", err)
+    }
+
+
+    fmt.Printf("Transaction sent: %s\n", tx.Hash().Hex())
+
+    return nil
 }
