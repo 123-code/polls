@@ -2,7 +2,10 @@ pragma solidity ^0.8.19;
 
 import "@openzeppelin/contracts/utils/Address.sol";
 import "./IMyToken.sol"; 
+/*
+TODO allow off-chain signing by the owner and verification of the signature on-chain to ensure the call is authorized.
 
+*/
 contract WalletImplementation {
     using Address for address;
 
