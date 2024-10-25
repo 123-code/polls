@@ -21,12 +21,16 @@ contract WalletImplementation {
         require(success, "Transaction failed");
     }
 
-    function mintNFT() external payable {
-        require(msg.sender == owner, "Not authorized");
-        require(msg.value >= nftContract.price(), "Insufficient payment");
+  function mintNFT() external payable {
+    require(msg.sender == owner, "Not authorized");
 
-        uint256 newTokenId = nftContract.mint{value: msg.value}(address(this));
-    }
+    uint256 price = nftContract.price();
+    require(msg.value >= price, "Insufficient payment");
+    require(address(this).balance >= msg.value, "Insufficient contract balance");
+
+    uint256 newTokenId = nftContract.mint{value: msg.value}(address(this));
+    require(newTokenId != 0, "Mint failed");
+}
 
 
     function withdraw() external {

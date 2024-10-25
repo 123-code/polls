@@ -6,13 +6,13 @@ contract MyToken is ERC721URIStorage {
  
     uint256 private _nextTokenId;
 
-    constructor() ERC721("MyToken", "MTK") {
-        _nextTokenId = 1; // Initialize the first token ID
+    constructor() ERC721("ECVote", "VTT") {
+        _nextTokenId = 1;
     }
 
     mapping(address => uint) public tokencount;
     mapping(uint => address) public tokenids;
-    uint256 public immutable price = 0.01 ether;
+    uint256 public immutable price = 0.000001 ether;
 
     event Burned(address indexed owner, uint256 indexed tokenId);
 
