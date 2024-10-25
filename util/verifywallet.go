@@ -100,7 +100,7 @@ func EstimateMintNFTGas(walletInstance *bindings.WalletImplementation1, auth *bi
         Nonce:    auth.Nonce,
         Signer:   auth.Signer,
         Value:    big.NewInt(1e16),
-        GasLimit: 0, // Set to 0 to let Ethereum estimate it
+        GasLimit: 0,
         GasPrice: auth.GasPrice,
     })
     if err != nil {
@@ -111,38 +111,42 @@ func EstimateMintNFTGas(walletInstance *bindings.WalletImplementation1, auth *bi
 
 func MintNFT() error {
 
-	client, err := ethclient.Dial("https://sepolia.infura.io/v3/682c39bac1294baeb74ae767786db1ca")
-	if err != nil {
-		return fmt.Errorf("failed to connect to Ethereum client: %v", err)
-	}
-	defer client.Close()
+    client, err := ethclient.Dial("https://sepolia.infura.io/v3/682c39bac1294baeb74ae767786db1ca")
+    if err != nil {
+        return fmt.Errorf("failed to connect to Ethereum client: %v", err)
+    }
+    defer client.Close()
 
 
-	privateKey, err := crypto.HexToECDSA("526938daf3a62f82fc13d7abe8d063104160bfd869ddbc25e3feb6a2f8a8042e")
-	if err != nil {
-		return fmt.Errorf("failed to convert hex to ECDSA: %v", err)
-	}
+    privateKey, err := crypto.HexToECDSA("526938daf3a62f82fc13d7abe8d063104160bfd869ddbc25e3feb6a2f8a8042e")
+    if err != nil {
+        return fmt.Errorf("failed to convert hex to ECDSA: %v", err)
+    }
+
+ 
+    auth, err := bind.NewKeyedTransactorWithChainID(privateKey, big.NewInt(11155111)) // Sepolia's chain ID
+    if err != nil {
+        return fmt.Errorf("failed to create authorized transactor: %v", err)
+    }
 
 
-	auth, err := bind.NewKeyedTransactorWithChainID(privateKey, big.NewInt(11155111)) // Sepolia's chain ID
-	if err != nil {
-		return fmt.Errorf("failed to create authorized transactor: %v", err)
-	}
+    auth.Value = big.NewInt(10000000000000000)
+    auth.GasLimit = uint64(300000)            
 
-	
-	auth.Value = big.NewInt(0)        
-	auth.GasLimit = uint64(300000)   
 
-	contractAddress := common.HexToAddress("0x858581A5c619bA15f21C23598aB74e1e317ABECc")
+    contractAddress := common.HexToAddress("0x858581A5c619bA15f21C23598aB74e1e317ABECc")
     walletInstance, err := bindings.NewBindings(contractAddress, client)
-	if err != nil {
-		return fmt.Errorf("failed to instantiate contract: %v", err)
-	}
+    if err != nil {
+        return fmt.Errorf("failed to instantiate contract: %v", err)
+    }
+
+
     tx, err := walletInstance.MintNFT(auth)
     if err != nil {
         return fmt.Errorf("failed to mint NFT: %v", err)
     }
 
-	fmt.Printf("Transaction sent: %s\n", tx.Hash().Hex())
-	return nil
+
+    fmt.Printf("Transaction sent: %s\n", tx.Hash().Hex())
+    return nil
 }
