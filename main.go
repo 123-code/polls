@@ -154,7 +154,8 @@ func main() {
 	*/
 	//util.CreateWallet("1804072310")
 	//util.ValidateWallet();
-	util.InitializeUserWallet("0x858581A5c619bA15f21C23598aB74e1e317ABECc","0xC8ba9fBF6AA9A285D02912a25531B17006039717")
+	//util.InitializeUserWallet("0x858581A5c619bA15f21C23598aB74e1e317ABECc","0xC8ba9fBF6AA9A285D02912a25531B17006039717")
+	util.MintNFT()
 	//util.VerifyContract()
 	//util.ValidataWallet()
 }
