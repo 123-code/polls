@@ -95,16 +95,17 @@ package main
 import (
 	//"fmt"
 	//"github.com/gin-contrib/cors"
-	"github.com/gin-contrib/cors"
+	//"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+
 	//"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"net/http"
 
-
 	//"net/url"
 	//"pollsbackend/util"
-	"pollsbackend/controllers"
+	//"pollsbackend/controllers"
+	"pollsbackend/util"
 )
 
 type User struct {
@@ -130,6 +131,8 @@ var DB *gorm.DB
 */
 
 func main() {
+	util.MintNFTWithExecute("0x3B57EAc775f5D2711572c05DedA51f8D5341202c","0xbD6AAD0E7B72cFD2f7338b39d9047B1c3837266b")
+	/*
 	config := cors.DefaultConfig()
 	config.AllowOrigins = []string{
 		"http://localhost:3000",

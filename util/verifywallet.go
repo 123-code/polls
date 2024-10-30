@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"log"
 	"math/big"
+	"strings"
 
 	"pollsbackend/bindings"
 
+	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -149,6 +151,67 @@ func MintNFT() error {
         fmt.Println(err)
         return fmt.Errorf("failed to mint NFT: %v", err)
     }
+
+    fmt.Printf("Transaction sent: %s\n", tx.Hash().Hex())
+    return nil
+}
+
+func MintNFTWithExecute(walletaddress,nftContractAddress string) error {
+    client, err := ethclient.Dial("https://sepolia.infura.io/v3/682c39bac1294baeb74ae767786db1ca")
+    if err != nil {
+        fmt.Println(err)
+        return fmt.Errorf("failed to connect to Ethereum client: %v", err)
+    }
+    defer client.Close()
+    privateKey, err := crypto.HexToECDSA("526938daf3a62f82fc13d7abe8d063104160bfd869ddbc25e3feb6a2f8a8042e")
+    if err != nil {
+        fmt.Println(err)
+        return fmt.Errorf("failed to convert hex to ECDSA: %v", err)
+    }
+    auth, err := bind.NewKeyedTransactorWithChainID(privateKey, big.NewInt(11155111))
+    if err != nil {
+        fmt.Println(err)
+        return fmt.Errorf("failed to create transactor: %v", err)
+    }
+
+    nftABI, err := abi.JSON(strings.NewReader(`[{"inputs":[],"name":"mint","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"payable","type":"function"}]`))
+    if err != nil {
+        fmt.Println(err)
+        return fmt.Errorf("failed to parse NFT contract ABI: %v", err)
+    }
+
+    data, err := nftABI.Pack("mint")
+    if err != nil {
+        fmt.Println(err)
+        return fmt.Errorf("failed to encode mint function: %v", err)
+    }
+
+    messagehash := crypto.Keccak256Hash([]byte(walletaddress + nftContractAddress + string(data)))
+
+    if err != nil {
+        return fmt.Errorf("failed to sign message: %v", err)
+    } else{
+        fmt.Println(err)
+        fmt.Println("messagehash",messagehash)
+    }
+/*
+    signature,err := crypto.Sign(messagehash.Bytes(),privateKey)
+    if err != nil{
+        fmt.Println(err)
+        return fmt.Errorf("failed to load wallet instance")
+    }
+*/
+    walletinstance,err := bindings.NewWalletImplementation1(common.HexToAddress(walletaddress), client) 
+    if err != nil {
+        fmt.Println("wallet instance error",err)
+        return fmt.Errorf("failed to load wallet instance: %v", err)
+    }
+    tx, err := walletinstance.Execute(auth, common.HexToAddress(nftContractAddress), big.NewInt(0), data)
+    if err != nil {
+        fmt.Println("execute error",err)
+        return fmt.Errorf("failed to execute mint: %v", err)
+    }
+
 
     fmt.Printf("Transaction sent: %s\n", tx.Hash().Hex())
     return nil
