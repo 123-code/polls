@@ -2,7 +2,7 @@ package controllers
 
 import (
 	"net/http"
-	"pollsbackend/util"
+	"pollsbackend/validators"
 
 	"github.com/gin-gonic/gin"
 )
@@ -21,17 +21,17 @@ func EnterUser(c *gin.Context) {
         })
         return
     }
-    
-
-    if !util.ValidateID(request.UserID) {
+    isValid, err := validators.ValidateID(request.UserID)
+    if err != nil || !isValid {
         c.JSON(http.StatusUnauthorized, gin.H{
             "error": "Invalid ID format or unauthorized ID",
         })
         return
     }
-    
-
     c.JSON(http.StatusOK, gin.H{
         "message": "User validated successfully",
     })
-}
+    }
+    
+
+  
