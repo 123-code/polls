@@ -156,18 +156,20 @@ func MintNFT() error {
     return nil
 }
 
-func MintNFTWithExecute(walletaddress,nftContractAddress string) error {
+func MintNFTWithExecute(walletaddress, nftContractAddress string) error {
     client, err := ethclient.Dial("https://sepolia.infura.io/v3/682c39bac1294baeb74ae767786db1ca")
     if err != nil {
         fmt.Println(err)
         return fmt.Errorf("failed to connect to Ethereum client: %v", err)
     }
     defer client.Close()
+
     privateKey, err := crypto.HexToECDSA("526938daf3a62f82fc13d7abe8d063104160bfd869ddbc25e3feb6a2f8a8042e")
     if err != nil {
         fmt.Println(err)
         return fmt.Errorf("failed to convert hex to ECDSA: %v", err)
     }
+
     auth, err := bind.NewKeyedTransactorWithChainID(privateKey, big.NewInt(11155111))
     if err != nil {
         fmt.Println(err)
@@ -186,32 +188,43 @@ func MintNFTWithExecute(walletaddress,nftContractAddress string) error {
         return fmt.Errorf("failed to encode mint function: %v", err)
     }
 
-    messagehash := crypto.Keccak256Hash([]byte(walletaddress + nftContractAddress + string(data)))
+    // Create message hash matching the contract's verification
+    targetAddress := common.HexToAddress(nftContractAddress)
+    value := big.NewInt(0)
+    walletAddr := common.HexToAddress(walletaddress)
+    
+    // Match the contract's message hash calculation
+    messageHash := crypto.Keccak256Hash(
+        targetAddress.Bytes(),
+        common.LeftPadBytes(value.Bytes(), 32),
+        crypto.Keccak256(data),
+        walletAddr.Bytes(),
+    )
 
+    // Add Ethereum signed message prefix
+    prefixedHash := crypto.Keccak256Hash([]byte(fmt.Sprintf("\x19Ethereum Signed Message:\n32%s", messageHash.Bytes())))
+
+    // Sign the prefixed hash
+    signature, err := crypto.Sign(prefixedHash.Bytes(), privateKey)
     if err != nil {
+        fmt.Println(err)
         return fmt.Errorf("failed to sign message: %v", err)
-    } else{
-        fmt.Println(err)
-        fmt.Println("messagehash",messagehash)
     }
-/*
-    signature,err := crypto.Sign(messagehash.Bytes(),privateKey)
-    if err != nil{
-        fmt.Println(err)
-        return fmt.Errorf("failed to load wallet instance")
-    }
-*/
-    walletinstance,err := bindings.NewWalletImplementation1(common.HexToAddress(walletaddress), client) 
+
+    // Fix signature format (v + 27)
+    signature[64] += 27
+
+    walletinstance, err := bindings.NewWalletContract(common.HexToAddress(walletaddress), client)
     if err != nil {
-        fmt.Println("wallet instance error",err)
+        fmt.Println("wallet instance error", err)
         return fmt.Errorf("failed to load wallet instance: %v", err)
     }
-    tx, err := walletinstance.Execute(auth, common.HexToAddress(nftContractAddress), big.NewInt(0), data)
+
+    tx, err := walletinstance.Execute(auth, targetAddress, value, data, signature)
     if err != nil {
-        fmt.Println("execute error",err)
+        fmt.Println("execute error", err)
         return fmt.Errorf("failed to execute mint: %v", err)
     }
-
 
     fmt.Printf("Transaction sent: %s\n", tx.Hash().Hex())
     return nil

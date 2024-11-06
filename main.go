@@ -94,7 +94,7 @@ package main
 
 import (
 	//"fmt"
-	//"github.com/gin-contrib/cors"
+	"github.com/gin-contrib/cors"
 	//"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 
@@ -104,8 +104,8 @@ import (
 
 	//"net/url"
 	//"pollsbackend/util"
-	//"pollsbackend/controllers"
-	"pollsbackend/util"
+	"pollsbackend/controllers"
+	//"pollsbackend/util"
 )
 
 type User struct {
@@ -131,8 +131,8 @@ var DB *gorm.DB
 */
 
 func main() {
-	util.MintNFTWithExecute("0x3B57EAc775f5D2711572c05DedA51f8D5341202c","0xbD6AAD0E7B72cFD2f7338b39d9047B1c3837266b")
-	/*
+	//util.MintNFTWithExecute("0x3B57EAc775f5D2711572c05DedA51f8D5341202c","0xbD6AAD0E7B72cFD2f7338b39d9047B1c3837266b")
+	
 	config := cors.DefaultConfig()
 	config.AllowOrigins = []string{
 		"http://localhost:3000",
@@ -150,7 +150,7 @@ func main() {
 	r.POST("/validateid", controllers.EnterUser)
 	r.Run(":8080")
 
-/*
+
 
 
 
@@ -161,7 +161,7 @@ func main() {
 	r.DELETE("/users/:id", deleteUser)
 
 	r.Run(":8080")
-	*/
+	
 	//util.CreateWallet("1804072310")
 	//util.ValidateWallet();
 	//util.InitializeUserWallet("0x858581A5c619bA15f21C23598aB74e1e317ABECc","0xC8ba9fBF6AA9A285D02912a25531B17006039717")
