@@ -3,12 +3,12 @@ package controllers
 import (
 	"net/http"
 	"pollsbackend/validators"
-
+	"strconv"
 	"github.com/gin-gonic/gin"
 )
 
 type UserIDRequest struct {
-    UserID uint `json:"user_id" binding:"required"`
+    UserID string `json:"user_id" binding:"required"`
 }
 
 
@@ -21,17 +21,25 @@ func EnterUser(c *gin.Context) {
         })
         return
     }
-    isValid, err := validators.ValidateID(request.UserID)
-    if err != nil || !isValid {
-        c.JSON(http.StatusUnauthorized, gin.H{
-            "error": "Invalid ID format or unauthorized ID",
+
+    // Convert UserID string to uint for validation
+    userIDUint, err := strconv.ParseUint(request.UserID, 10, 32)
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{
+            "error": "UserID must be a valid integer",
         })
         return
     }
-    c.JSON(http.StatusOK, gin.H{
-        "message": "User validated successfully",
-    })
+
+    // Call the validation function
+    validate,err := validators.ValidateID(uint(userIDUint))
+    if validate != true{
+        c.JSON(http.StatusBadRequest, gin.H{
+            "error": "UserID must be a valid integer",
+        })
     }
+
+}
     
 
   
