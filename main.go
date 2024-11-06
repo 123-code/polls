@@ -95,7 +95,7 @@ package main
 import (
 	//"fmt"
 	//"github.com/gin-contrib/cors"
-	//"github.com/gin-contrib/cors"
+    "github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 
 	//"gorm.io/driver/postgres"
@@ -104,8 +104,8 @@ import (
 
 	//"net/url"
 	//"pollsbackend/util"
-	//"pollsbackend/controllers"
-	"pollsbackend/util"
+	"pollsbackend/controllers"
+	//"pollsbackend/util"
 )
 
 type User struct {
