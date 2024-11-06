@@ -17,6 +17,7 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/rpc"
+	//"github.com/gin-gonic/gin"
 )
 
 type WalletFactory struct{
@@ -126,7 +127,10 @@ func (w *WalletFactory) ParseWalletCreated(log types.Log) (struct {
 
 //auth
 
-func CreateWallet(userID string) (string, error) {
+func CreateWallet(userID uint) (string, error) {
+  
+
+ 
     // Create a custom HTTP client
     httpClient := &http.Client{}
     fmt.Println("llego")
@@ -179,7 +183,7 @@ func CreateWallet(userID string) (string, error) {
     }
 
     // Call the createWallet function
-    tx, err := factory.CreateWallet(auth, userID)
+    tx, err := factory.CreateWallet(auth, string(userID))
     if err != nil {
         fmt.Println("error creating wallet",err)
         return "", fmt.Errorf("failed to create wallet: %v", err)

@@ -94,7 +94,7 @@ package main
 
 import (
 	//"fmt"
-	"github.com/gin-contrib/cors"
+	//"github.com/gin-contrib/cors"
 	//"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 
@@ -104,8 +104,8 @@ import (
 
 	//"net/url"
 	//"pollsbackend/util"
-	"pollsbackend/controllers"
-	//"pollsbackend/util"
+	//"pollsbackend/controllers"
+	"pollsbackend/util"
 )
 
 type User struct {
@@ -148,9 +148,10 @@ func main() {
 	r := gin.Default()
 	r.Use(cors.New(config))
 	r.POST("/validateid", controllers.EnterUser)
-	r.Run(":8080")
 
 
+
+/*
 
 
 
@@ -161,7 +162,7 @@ func main() {
 	r.DELETE("/users/:id", deleteUser)
 
 	r.Run(":8080")
-	
+	*/
 	//util.CreateWallet("1804072310")
 	//util.ValidateWallet();
 	//util.InitializeUserWallet("0x858581A5c619bA15f21C23598aB74e1e317ABECc","0xC8ba9fBF6AA9A285D02912a25531B17006039717")
