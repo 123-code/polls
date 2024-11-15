@@ -95,7 +95,7 @@ package main
 import (
 	//"fmt"
 	//"github.com/gin-contrib/cors"
-	"github.com/gin-contrib/cors"
+	//"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 
 	//"gorm.io/driver/postgres"
@@ -103,8 +103,8 @@ import (
 	"net/http"
 
 	//"net/url"
-	//"pollsbackend/util"
-	"pollsbackend/controllers"
+	"pollsbackend/util"
+	//"pollsbackend/controllers"
 	//"pollsbackend/util"
 	//"pollsbackend/util"
 )
@@ -132,8 +132,11 @@ var DB *gorm.DB
 */
 
 func main() {
+	//util.InitializeUserWallet("0x0506208DC8461d22f964AD7ee223cbD09e10980A","0xbD6AAD0E7B72cFD2f7338b39d9047B1c3837266b")
 	//util.MintNFTWithExecute("0x3B57EAc775f5D2711572c05DedA51f8D5341202c","0xbD6AAD0E7B72cFD2f7338b39d9047B1c3837266b")
-	
+	//util.ValidateWallet()
+	util.CreateWalet()
+	/*
 	config := cors.DefaultConfig()
 	config.AllowOrigins = []string{
 		"http://localhost:3000",
@@ -169,6 +172,7 @@ func main() {
 	//util.MintNFT()
 	//util.VerifyContract()
 	//util.ValidataWallet()
+	*/
 }
 
 func createUser(c *gin.Context) {
