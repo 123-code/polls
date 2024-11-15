@@ -135,7 +135,9 @@ func main() {
 	//util.InitializeUserWallet("0x0506208DC8461d22f964AD7ee223cbD09e10980A","0xbD6AAD0E7B72cFD2f7338b39d9047B1c3837266b")
 	//util.MintNFTWithExecute("0x3B57EAc775f5D2711572c05DedA51f8D5341202c","0xbD6AAD0E7B72cFD2f7338b39d9047B1c3837266b")
 	//util.ValidateWallet()
-	util.CreateWalet()
+	//util.CreateWalet()
+	//util.MintNFT("1804072310")
+	util.MintNFTWithExecute("0x858581A5c619bA15f21C23598aB74e1e317ABECc","0xbD6AAD0E7B72cFD2f7338b39d9047B1c3837266b")
 	/*
 	config := cors.DefaultConfig()
 	config.AllowOrigins = []string{
