@@ -15,6 +15,12 @@ type VoteController struct {
 
 }
 
+type vote struct{
+	gorm.Model
+	CandidateID uint   `json:"candidate_id"`
+	IPAddress   string `json:"ip_address"`
+}
+
 func NewVoteController(db *gorm.DB) *VoteController {
 	return &VoteController{}
 }
@@ -42,9 +48,34 @@ func (vc *VoteController) RegisterCandidate(c *gin.Context) {
 
 	c.JSON(http.StatusCreated, candidate)
 }
-
 func (vc *VoteController) CastVote(c *gin.Context) {
+    var vote models.MyVote  
     candidateID := c.Param("id")
+    ipAddress := c.ClientIP()
+    var totalVotesCount int64
+    result := initializers.DB.Model(&models.MyVote{}).Where("ip_address = ?", ipAddress).Count(&totalVotesCount)
+    
+    if result.Error != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Error checking vote count"})
+        return
+    }
+
+    // Check if IP has already reached vote limit
+    if totalVotesCount >= 5 {
+        c.JSON(http.StatusForbidden, gin.H{
+            "error": "Maximum vote limit (5 votes) reached from this IP address",
+            "votes_made": totalVotesCount,
+        })
+        return
+    }
+
+    var existingVote models.MyVote
+    duplicateVoteCheck := initializers.DB.Where("candidate_id = ? AND ip_address = ?", candidateID, ipAddress).First(&existingVote)
+    
+    if duplicateVoteCheck.Error == nil {
+        c.JSON(http.StatusForbidden, gin.H{"error": "You have already voted for this candidate"})
+        return
+    }
 
     var candidate models.Candidate
     if err := initializers.DB.First(&candidate, candidateID).Error; err != nil {
@@ -58,7 +89,22 @@ func (vc *VoteController) CastVote(c *gin.Context) {
         return
     }
 
-    c.JSON(http.StatusOK, gin.H{"message": "Vote cast successfully", "candidate": candidate})
+    // Record the vote
+    vote = models.MyVote{
+        CandidateID: candidate.ID,
+        IPAddress:   ipAddress,
+    }
+    
+    if err := initializers.DB.Create(&vote).Error; err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to record vote"})
+        return
+    }
+
+    c.JSON(http.StatusOK, gin.H{
+        "message": "Vote cast successfully",
+        "candidate": candidate,
+        "votes_remaining": 5 - (totalVotesCount + 1),
+    })
 }
 
 func (vc *VoteController) GetCandidates(c *gin.Context) {

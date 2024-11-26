@@ -1,9 +1,11 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
 	"pollsbackend/validators"
 	"strconv"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -34,6 +36,8 @@ func EnterUser(c *gin.Context) {
     // Call the validation function
     validate,err := validators.ValidateID(uint(userIDUint))
     if validate != true{
+        fmt.Println("validation error,UserID must be a valid integer")
+        fmt.Println(err)
         c.JSON(http.StatusBadRequest, gin.H{
             "error": "UserID must be a valid integer",
         })
