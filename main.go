@@ -76,6 +76,7 @@ func main() {
 	r.DELETE("/users/:id", deleteUser)
 	r.POST("/vote/:id",voteController.CastVote)
 	r.POST("/registercandidate",voteController.RegisterCandidate)
+	r.GET("/votes",controllers.AnalyzeVotersByProvince)
 	r.Run(":8080")
 	
 
