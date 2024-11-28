@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func ValidateID(id uint) (bool,error){
+func ValidateID(c *gin.Context,id uint) (bool,error){
 
     idStr := strconv.FormatUint(uint64(id), 10)
     coefficients := []float64{2, 1, 2, 1, 2, 1, 2, 1, 2}
@@ -82,6 +82,8 @@ func ValidateID(id uint) (bool,error){
     }
     fmt.Println("last digit",lastdigit)
     fmt.Println("final reult",finalResult)
+    
+
     if float64(lastdigit) == finalResult{
         fmt.Println("verificacion de digitos exitosa")
     } else{
@@ -89,7 +91,10 @@ func ValidateID(id uint) (bool,error){
             return true,fmt.Errorf("error: %w", err)
         } else {return false,fmt.Errorf("error: %w", err)}
     }
+   
+   
     return true,fmt.Errorf("error: %w", err)
+    
 
 }
 
@@ -111,7 +116,7 @@ func CreateUserWallet(c *gin.Context) error {
     if err != nil {
         return fmt.Errorf("failed to convert ID to uint: %v", err)
     }
-    valid,err := ValidateID(uint(uintid))
+    valid,err := ValidateID(c,uint(uintid))
     if err != nil{
         return err
     }

@@ -3,6 +3,7 @@ package controllers
 import (
 	"fmt"
 	"net/http"
+	"pollsbackend/util"
 	"pollsbackend/validators"
 	"strconv"
 
@@ -24,7 +25,7 @@ func EnterUser(c *gin.Context) {
         return
     }
 
-    // Convert UserID string to uint for validation
+
     userIDUint, err := strconv.ParseUint(request.UserID, 10, 32)
     if err != nil {
         c.JSON(http.StatusBadRequest, gin.H{
@@ -33,14 +34,23 @@ func EnterUser(c *gin.Context) {
         return
     }
 
-    // Call the validation function
-    validate,err := validators.ValidateID(uint(userIDUint))
-    if validate != true{
+
+    validate,err := validators.ValidateID(c,uint(userIDUint))
+    if !validate {
         fmt.Println("validation error,UserID must be a valid integer")
         fmt.Println(err)
         c.JSON(http.StatusBadRequest, gin.H{
             "error": "UserID must be a valid integer",
         })
+    } else{
+    jwt,err := util.GenerateJWTs(c,string(userIDUint))
+    if err != nil{
+        fmt.Println(err)
+    }
+    fmt.Println(jwt)
+    c.JSON(http.StatusAccepted, gin.H{
+        "token": jwt,
+    })
     }
 
 }
