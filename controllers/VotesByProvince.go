@@ -4,12 +4,9 @@ import (
 	"net/http"
 	"pollsbackend/initializers"
 	"pollsbackend/models"
-	//"strconv"
-	//"strings"
 	"github.com/gin-gonic/gin"
 )
 
-// Province codes and their names
 var provinces = map[string]string{
 	"01": "Azuay",
 	"02": "Bolivar",
@@ -40,7 +37,6 @@ var provinces = map[string]string{
 func AnalyzeVotersByProvince(c *gin.Context) {
 	var cedulas []models.Cedula
 
-	// Fetch all user IDs from the database
 	if err := initializers.DB.Find(&cedulas).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Failed to retrieve user IDs",
@@ -48,28 +44,23 @@ func AnalyzeVotersByProvince(c *gin.Context) {
 		return
 	}
 
-	// Initialize a map to count voters per province
 	voterCount := make(map[string]int)
 
-	// Process each user ID
 	for _, cedula := range cedulas {
 		if len(cedula.UserID) < 2 {
-			continue // Skip invalid IDs
+			continue 
 		}
 
-		provinceCode := cedula.UserID[:2] // Extract first two digits
+		provinceCode := cedula.UserID[:2]
 		if provinceName, exists := provinces[provinceCode]; exists {
 			voterCount[provinceName]++
 		}
 	}
 
-	// Prepare the result
 	result := gin.H{}
 	for province, count := range voterCount {
 		result[province] = count
 	}
-
-	// Return the analysis
 	c.JSON(http.StatusOK, gin.H{
 		"voter_analysis": result,
 	})

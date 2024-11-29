@@ -61,13 +61,16 @@ func (vc *VoteController) CastVote(c *gin.Context) {
     }
 
     // Check if IP has already reached vote limit
+    
     if totalVotesCount >= 5 {
+        fmt.Println("ip limits reached")
         c.JSON(http.StatusForbidden, gin.H{
             "error": "Maximum vote limit (5 votes) reached from this IP address",
             "votes_made": totalVotesCount,
         })
         return
     }
+    */
 
     var existingVote models.MyVote
     duplicateVoteCheck := initializers.DB.Where("candidate_id = ? AND ip_address = ?", candidateID, ipAddress).First(&existingVote)
@@ -115,4 +118,44 @@ func (vc *VoteController) GetCandidates(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, candidates)
+}
+
+func (vc *VoteController) GetVoteCounts(c *gin.Context) {
+    var candidates []models.Candidate
+    if err := initializers.DB.Find(&candidates).Error; err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
+
+    // Crear un mapa para almacenar los votos por candidato
+    voteCounts := make(map[uint]int64)
+
+    // Contar los votos por cada candidato
+    for _, candidate := range candidates {
+        var count int64
+        if err := initializers.DB.Model(&models.MyVote{}).Where("candidate_id = ?", candidate.ID).Count(&count).Error; err != nil {
+            c.JSON(http.StatusInternalServerError, gin.H{"error": "Error counting votes"})
+            return
+        }
+        voteCounts[candidate.ID] = count
+    }
+
+    // Determinar el candidato ganador
+    var winner *models.Candidate
+    maxVotes := int64(0)
+
+    for _, candidate := range candidates {
+        if voteCounts[candidate.ID] > maxVotes {
+            maxVotes = voteCounts[candidate.ID]
+            winner = &candidate
+        }
+    }
+
+    response := gin.H{
+        "candidates": candidates,
+        "vote_counts": voteCounts,
+        "winner": winner,
+    }
+
+    c.JSON(http.StatusOK, response)
 }

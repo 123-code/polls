@@ -68,7 +68,7 @@ func main() {
 
 
 
-
+//curl -X GET "http://localhost:8080/sort?candidate_id=1&sort=oldest" -H "Content-Type: application/json"
 	r.POST("/users", createUser)
 	r.GET("/users", getUsers)
 	r.GET("/users/:id", getUser)
@@ -77,6 +77,10 @@ func main() {
 	r.POST("/vote/:id",voteController.CastVote)
 	r.POST("/registercandidate",voteController.RegisterCandidate)
 	r.GET("/votes",controllers.AnalyzeVotersByProvince)
+    r.GET("/vote_counts", voteController.GetVoteCounts)
+	r.GET("/vote_data", voteController.GetAllVotes)
+	r.GET("/sort",voteController.SortVotes)
+	r.GET("/vote_data/all", voteController.GetAllVotes)
 	r.Run(":8080")
 	
 
