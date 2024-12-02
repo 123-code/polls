@@ -9,7 +9,7 @@ contract VotingSystem {
     }
 
 
-    mapping(address => bool) public hasVoted;
+
     mapping(string=>uint256) public candidateIndex;
 
     Candidate[] public candidates;
@@ -41,7 +41,7 @@ contract VotingSystem {
  
         require(_candidateIndex < candidates.length, "Invalid candidate index");
         candidates[_candidateIndex].voteCount++;
-        hasVoted[msg.sender] = true;
+  
 
         emit VoteCast(msg.sender, _candidateIndex);
     }
@@ -74,17 +74,5 @@ contract VotingSystem {
             name: _name,
             voteCount: 0
         }));
-    }
-
-    function resetVoting() public onlyOwner {
-
-        for (uint256 i = 0; i < candidates.length; i++) {
-            candidates[i].voteCount = 0;
-        }
-
-        for (uint256 i = 0; i < candidates.length; i++) {
-            address voterAddress = address(uint160(uint256(keccak256(abi.encodePacked(i)))));
-            hasVoted[voterAddress] = false;
-        }
     }
 }

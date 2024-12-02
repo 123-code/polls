@@ -70,7 +70,7 @@ func (vc *VoteController) CastVote(c *gin.Context) {
         })
         return
     }
-    */
+
 
     var existingVote models.MyVote
     duplicateVoteCheck := initializers.DB.Where("candidate_id = ? AND ip_address = ?", candidateID, ipAddress).First(&existingVote)
