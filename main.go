@@ -9,7 +9,7 @@ import (
 	"net/http"
 	//"pollsbackend/controllers"
 	//"pollsbackend/initializers"
-	"pollsbackend/util"
+//	"pollsbackend/util"
 
 )
 
@@ -47,7 +47,6 @@ func main() {
 	//util.CreateWalet()
 	//util.MintNFT("1804072310")
 	//util.MintNFTWithExecute("0x858581A5c619bA15f21C23598aB74e1e317ABECc","0xbD6AAD0E7B72cFD2f7338b39d9047B1c3837266b")\
-	util.Vote(0, "526938daf3a62f82fc13d7abe8d063104160bfd869ddbc25e3feb6a2f8a8042e")
 	//util.AddCandidate("daniel noboa","526938daf3a62f82fc13d7abe8d063104160bfd869ddbc25e3feb6a2f8a8042e")
 	//util.GetLeader()
 	//util.GetAllCandidates()

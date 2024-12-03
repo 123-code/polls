@@ -33,14 +33,14 @@ func ConnectVotingSystem() (*bindings.Bindings, *ethclient.Client) {
 
 
 func GetAuth(privateKey string) *bind.TransactOpts {
-	// Parse the private key
+
 	key, err := crypto.HexToECDSA(privateKey)
 	if err != nil {
 		log.Fatalf("Failed to parse private key: %v", err)
 	}
 
-	// Create a transactor with the chain ID
-	auth, err := bind.NewKeyedTransactorWithChainID(key, big.NewInt(11155111)) // Replace with your chain ID
+
+	auth, err := bind.NewKeyedTransactorWithChainID(key, big.NewInt(11155111))
 	if err != nil {
 
 		log.Fatalf("Failed to create transactor: %v", err)
@@ -50,65 +50,52 @@ func GetAuth(privateKey string) *bind.TransactOpts {
 }
 
 func Vote(candidateIndex uint64, privateKey string) error {
-    // Create Ethereum client
-    client, err := ethclient.Dial("https://sepolia.infura.io/v3/682c39bac1294baeb74ae767786db1ca")
-    if err != nil {
-		fmt.Println(err)
-        return fmt.Errorf("failed to connect to Ethereum client: %v", err)
-    }
+
+    instance, client := ConnectVotingSystem()
     defer client.Close()
 
-    // Contract address
-    contractAddress := common.HexToAddress("0x357d43845E59c6A140E57827b95405199120dF4e")
-
-    // Create contract instance
-    instance, err := bindings.NewBindings(contractAddress, client)
-    if err != nil {
-		fmt.Println(err)
-        return fmt.Errorf("failed to instantiate contract: %v", err)
-    }
-
-    // Parse private key
     key, err := crypto.HexToECDSA(privateKey)
     if err != nil {
-		fmt.Println(err)
-        return fmt.Errorf("failed to parse private key: %v", err)
+        return fmt.Errorf("failed to parse private key: %w", err)
     }
 
-    // Create transactor
+
     auth, err := bind.NewKeyedTransactorWithChainID(key, big.NewInt(11155111))
     if err != nil {
-		fmt.Println(err)
-        return fmt.Errorf("failed to create transactor: %v", err)
+        return fmt.Errorf("failed to create transactor: %w", err)
     }
 
-    // Set gas limit and price
-    auth.GasLimit = uint64(300000)  // Adjust gas limit as needed
-    gasPrice, err := client.SuggestGasPrice(context.Background())
-    if err != nil {
-		fmt.Println(err)
-        return fmt.Errorf("failed to get gas price: %v", err)
-    }
-    auth.GasPrice = gasPrice
+	gasPrice, err := client.SuggestGasPrice(context.Background())
+	if err != nil {
+		return fmt.Errorf("failed to get gas price: %w", err)
+	}
 
-    // Call the vote function
+gasPriceWithPremium := new(big.Int).Mul(gasPrice, big.NewInt(120))
+gasPriceWithPremium.Div(gasPriceWithPremium, big.NewInt(100))
+fmt.Printf("Network Gas Price: %v Gwei", new(big.Float).Quo(
+    new(big.Float).SetInt(gasPrice), 
+    big.NewFloat(1e9),
+))
+auth.GasPrice = gasPriceWithPremium
+fmt.Println(auth.GasPrice)
+
     tx, err := instance.Vote(auth, big.NewInt(int64(candidateIndex)))
+
+	fmt.Println(tx.Hash().String())
     if err != nil {
-		fmt.Println(err)
-        return fmt.Errorf("failed to cast vote: %v", err)
+        return fmt.Errorf("failed to cast vote: %w", err)
     }
 
     receipt, err := bind.WaitMined(context.Background(), client, tx)
-    if err != nil {fmt.Println(err)
-        return fmt.Errorf("error waiting for transaction to be mined: %v", err)
+    if err != nil {
+        return fmt.Errorf("error waiting for transaction to be mined: %w", err)
     }
 
     if receipt.Status != 1 {
-		fmt.Println(err)
         return fmt.Errorf("transaction failed: status %d", receipt.Status)
     }
 
-    fmt.Printf("Vote transaction successful. Hash: %s\n", tx.Hash().Hex())
+    log.Printf("Vote transaction successful. Hash: %s\n", tx.Hash().Hex())
     return nil
 }
 
@@ -130,7 +117,7 @@ func GetLeader() {
 	fmt.Printf("Current leader: %s with %d votes\n", leaderName, voteCount.Uint64())
 }
 
-// Get all candidates
+
 func GetAllCandidates() {
 	instance, client := ConnectVotingSystem()
 fmt.Println(client)
@@ -149,13 +136,12 @@ fmt.Println(client)
 	}
 }
 
-// Add a new candidate (owner only)
+
 func AddCandidate(name string, privateKey string) {
 	instance,client := ConnectVotingSystem()
 	fmt.Println(client)
 	auth := GetAuth(privateKey)
 
-	// Call the addCandidate function
 	tx, err := instance.AddCandidate(auth, name)
 	if err != nil {
 		log.Fatalf("Failed to add candidate: %v", err)
