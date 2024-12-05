@@ -3,12 +3,12 @@ package main
 
 import (
 
-	//"github.com/gin-contrib/cors"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 	"net/http"
-	//"pollsbackend/controllers"
-	//"pollsbackend/initializers"
+	"pollsbackend/controllers"
+	"pollsbackend/initializers"
 //	"pollsbackend/util"
 
 )
@@ -21,25 +21,13 @@ type User struct {
 
 var DB *gorm.DB
 
-/*func init() {
-	var err error
-	encodedPassword := url.QueryEscape("AVNS_LNgImquHJXNIMn4aMTt")
 
-	dsn := fmt.Sprintf("postgres://avnadmin:AVNS_Xv4rbmtFkoxKOGBDks_@pg-382a4bdb-udla-54df.g.aivencloud.com:18022/defaultdb?sslmode=require", encodedPassword)
-	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
-	if err != nil {
-		panic("failed to connect database")
-	}
 
-	DB.AutoMigrate(&User{})
-}
-*/
-/*
 func init(){
 	initializers.ConnectToDb()
 	initializers.SyncDatabase()
 }
-*/
+
 func main() {
 	//util.InitializeUserWallet("0x0506208DC8461d22f964AD7ee223cbD09e10980A","0xbD6AAD0E7B72cFD2f7338b39d9047B1c3837266b")
 	//util.MintNFTWithExecute("0x3B57EAc775f5D2711572c05DedA51f8D5341202c","0xbD6AAD0E7B72cFD2f7338b39d9047B1c3837266b")
@@ -50,7 +38,7 @@ func main() {
 	//util.AddCandidate("daniel noboa","526938daf3a62f82fc13d7abe8d063104160bfd869ddbc25e3feb6a2f8a8042e")
 	//util.GetLeader()
 	//util.GetAllCandidates()
-	/*
+	
 	voteController := controllers.NewVoteController(DB)
 	config := cors.DefaultConfig()
 	config.AllowOrigins = []string{
@@ -86,8 +74,10 @@ func main() {
 	r.GET("/vote_data", voteController.GetAllVotes)
 	r.GET("/sort",voteController.SortVotes)
 	r.GET("/vote_data/all", voteController.GetAllVotes)
+	r.GET("/obras/ratio", controllers.GetObrasRatio)
+    r.POST("/obras/initialize", controllers.InitializeObras)
 	r.Run(":8080")
-	*/
+	
 
 	//util.ValidateWallet();
 	//util.InitializeUserWallet("0x858581A5c619bA15f21C23598aB74e1e317ABECc","0xC8ba9fBF6AA9A285D02912a25531B17006039717")
