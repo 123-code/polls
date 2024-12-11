@@ -76,6 +76,8 @@ func main() {
 	r.GET("/vote_data/all", voteController.GetAllVotes)
 	r.GET("/obras/ratio", controllers.GetObrasRatio)
     r.POST("/obras/initialize", controllers.InitializeObras)
+	r.GET("/obras_analysis", controllers.AnalyzeObrasByProvince)
+	r.POST("/obras", controllers.CreateObra)
 	r.Run(":8080")
 	
 
