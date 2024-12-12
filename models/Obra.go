@@ -10,5 +10,5 @@ type Obra struct {
     Name        string `json:"name"`
     Description string `json:"description"`
     Status      string `json:"status"`
-    Province    string `json:"province"` // Nuevo campo para la provincia
+    Province    string `json:"province"`
 }
