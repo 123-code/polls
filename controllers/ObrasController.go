@@ -50,7 +50,6 @@ func GetObrasRatio(c *gin.Context) {
         var completedObrasCount int64
         var inProgressObrasCount int64
 
-        // Count total votes
         if err := initializers.DB.Model(&models.MyVote{}).
             Where("candidate_id = ?", candidate.ID).
             Count(&voteCount).Error; err != nil {
@@ -58,7 +57,6 @@ func GetObrasRatio(c *gin.Context) {
             return
         }
 
-        // Count total obras
         if err := initializers.DB.Model(&models.Obra{}).
             Where("candidate_id = ?", candidate.ID).
             Count(&obrasCount).Error; err != nil {
@@ -66,7 +64,6 @@ func GetObrasRatio(c *gin.Context) {
             return
         }
 
-        // Count completed obras
         if err := initializers.DB.Model(&models.Obra{}).
             Where("candidate_id = ? AND status = ?", candidate.ID, "completed").
             Count(&completedObrasCount).Error; err != nil {
@@ -81,12 +78,9 @@ func GetObrasRatio(c *gin.Context) {
             c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to count in-progress obras"})
             return
         }
-
-        // Enhanced ratio calculation
         ratio := float64(0)
         if obrasCount > 0 {
-            // Weighted calculation considering completed and in-progress obras
-            // Completed obras get full weight, in-progress obras get partial weight
+   
             weightedObrasCount := float64(completedObrasCount) + (float64(inProgressObrasCount) * 0.5)
             ratio = float64(voteCount) / weightedObrasCount
         }
@@ -107,22 +101,22 @@ func GetObrasRatio(c *gin.Context) {
 func InitializeObras(c *gin.Context) {
 
     obras := []models.Obra{
-        {CandidateID: 2, Name: "Infrastructure Project A", Description: "Road construction", Status: "completed"},
-        {CandidateID: 3, Name: "Healthcare Initiative B", Description: "Hospital renovation", Status: "in_progress"},
-        {CandidateID: 4, Name: "Education Program C", Description: "New school construction", Status: "completed"},
-        {CandidateID: 5, Name: "Agricultural Development D", Description: "Irrigation system installation", Status: "completed"},
-        {CandidateID: 6, Name: "Public Transport E", Description: "Bus route expansion", Status: "in_progress"},
-        {CandidateID: 7, Name: "Community Center F", Description: "Building a community center", Status: "completed"},
-        {CandidateID: 8, Name: "Renewable Energy G", Description: "Solar panel installation", Status: "completed"},
-        {CandidateID: 9, Name: "Waste Management H", Description: "Recycling program launch", Status: "in_progress"},
-        {CandidateID: 10, Name: "Cultural Heritage I", Description: "Restoration of historical sites", Status: "completed"},
-        {CandidateID: 11, Name: "Sports Facility J", Description: "Construction of a sports complex", Status: "in_progress"},
-        {CandidateID: 12, Name: "Urban Development K", Description: "City park renovation", Status: "completed"},
-        {CandidateID: 13, Name: "Technology Hub L", Description: "Establishment of a tech incubator", Status: "completed"},
-        {CandidateID: 14, Name: "Disaster Relief M", Description: "Emergency response training program", Status: "in_progress"},
-        {CandidateID: 15, Name: "Tourism Initiative N", Description: "Promotion of local tourism sites", Status: "completed"},
-        {CandidateID: 16, Name: "Infrastructure Upgrade O", Description: "Road repair and maintenance", Status: "completed"},
-        {CandidateID: 17, Name: "Healthcare Access P", Description: "Mobile health clinics program", Status: "in_progress"},
+        {CandidateID: 2, Name: "Infrastructure Project A", Description: "Road construction", Status: "completed",Province:"01"},
+        {CandidateID: 3, Name: "Healthcare Initiative B", Description: "Hospital renovation", Status: "in_progress",Province:"01"},
+        {CandidateID: 4, Name: "Education Program C", Description: "New school construction", Status: "completed",Province:"01"},
+        {CandidateID: 5, Name: "Agricultural Development D", Description: "Irrigation system installation", Status: "completed",Province:"01"},
+        {CandidateID: 6, Name: "Public Transport E", Description: "Bus route expansion", Status: "in_progress",Province:"01"},
+        {CandidateID: 7, Name: "Community Center F", Description: "Building a community center", Status: "completed",Province:"01"},
+        {CandidateID: 8, Name: "Renewable Energy G", Description: "Solar panel installation", Status: "completed",Province:"01"},
+        {CandidateID: 9, Name: "Waste Management H", Description: "Recycling program launch", Status: "in_progress",Province:"01"},
+        {CandidateID: 10, Name: "Cultural Heritage I", Description: "Restoration of historical sites", Status: "completed",Province:"01"},
+        {CandidateID: 11, Name: "Sports Facility J", Description: "Construction of a sports complex", Status: "in_progress",Province:"01"},
+        {CandidateID: 12, Name: "Urban Development K", Description: "City park renovation", Status: "completed",Province:"01"},
+        {CandidateID: 13, Name: "Technology Hub L", Description: "Establishment of a tech incubator", Status: "completed",Province:"01"},
+        {CandidateID: 14, Name: "Disaster Relief M", Description: "Emergency response training program", Status: "in_progress",Province:"01"},
+        {CandidateID: 15, Name: "Tourism Initiative N", Description: "Promotion of local tourism sites", Status: "completed",Province:"01"},
+        {CandidateID: 16, Name: "Infrastructure Upgrade O", Description: "Road repair and maintenance", Status: "completed",Province:"01"},
+        {CandidateID: 17, Name: "Healthcare Access P", Description: "Mobile health clinics program", Status: "in_progress",Province:"01"},
     }
 
     for _, obra := range obras {

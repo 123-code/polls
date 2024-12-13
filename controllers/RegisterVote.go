@@ -59,9 +59,7 @@ func (vc *VoteController) CastVote(c *gin.Context) {
         c.JSON(http.StatusInternalServerError, gin.H{"error": "Error checking vote count"})
         return
     }
-
-    // Check if IP has already reached vote limit
-    
+/*
     if totalVotesCount >= 5 {
         fmt.Println("ip limits reached")
         c.JSON(http.StatusForbidden, gin.H{
@@ -70,15 +68,17 @@ func (vc *VoteController) CastVote(c *gin.Context) {
         })
         return
     }
+        */
 
 
-    var existingVote models.MyVote
-    duplicateVoteCheck := initializers.DB.Where("candidate_id = ? AND ip_address = ?", candidateID, ipAddress).First(&existingVote)
-    
+    //var existingVote models.MyVote
+    //duplicateVoteCheck := initializers.DB.Where("candidate_id = ? AND ip_address = ?", candidateID, ipAddress).First(&existingVote)
+    /*
     if duplicateVoteCheck.Error == nil {
         c.JSON(http.StatusForbidden, gin.H{"error": "You have already voted for this candidate"})
         return
     }
+        */
 
     var candidate models.Candidate
     if err := initializers.DB.First(&candidate, candidateID).Error; err != nil {
@@ -92,7 +92,6 @@ func (vc *VoteController) CastVote(c *gin.Context) {
         return
     }
 
-    // Record the vote
     vote = models.MyVote{
         CandidateID: candidate.ID,
         IPAddress:   ipAddress,

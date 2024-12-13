@@ -78,6 +78,8 @@ func main() {
     r.POST("/obras/initialize", controllers.InitializeObras)
 	r.GET("/obras_analysis", controllers.AnalyzeObrasByProvince)
 	r.POST("/obras", controllers.CreateObra)
+	//r.POST("/events", controllers.CreateEvent)
+    r.GET("/events/impact", controllers.AnalyzeEventImpactByProvince)
 	r.Run(":8080")
 	
 

@@ -1,90 +1,87 @@
 package controllers
-
+// recuperamos obras y votos para el candidato, los comparamos en una formula que calcula el ratio obras/votos. esto por cada provincia
 import (
 	"fmt"
 	"net/http"
 	"pollsbackend/initializers"
 	"pollsbackend/models"
-	"strings"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
 
 func AnalyzeObrasByProvince(c *gin.Context) {
-    var cedulas []models.Cedula
-    var obras []models.Obra
+  // Obtener el `candidate_id` desde el request
+  candidateIDStr := c.Query("candidate_id")
+  if candidateIDStr == "" {
+      c.JSON(http.StatusBadRequest, gin.H{"error": "candidate_id is required"})
+      return
+  }
 
-    // Retrieve all cedulas 
-    if err := initializers.DB.Find(&cedulas).Error; err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{
-            "error": "Failed to retrieve user IDs",
-        })
-        return
-    }
+  candidateID, err := strconv.ParseUint(candidateIDStr, 10, 64)
+  if err != nil {
+      c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid candidate_id"})
+      return
+  }
 
-    // Retrieve all obras
-    if err := initializers.DB.Find(&obras).Error; err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{
-            "error": "Failed to retrieve obras",
-        })
-        return
-    }
 
-    voterCount := make(map[string]int)
-    obrasCount := make(map[string]int)
+  var events []models.Event
+  if err := initializers.DB.Where("candidate_id = ?", candidateID).Find(&events).Error; err != nil {
+      c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve events"})
+      return
+  }
 
-    // Count votes by province
-    for _, cedula := range cedulas {
-        if len(cedula.UserID) < 2 {
-            continue
-        }
-        
-        provinceCode := cedula.UserID[:2]
-        if provinceName, exists := provinces[provinceCode]; exists {
-            voterCount[provinceName]++
-        }
-    }
+  // Analizar votos por provincia
+  provinceVotes := make(map[string]int)
 
-    // Count obras by province
-    for _, obra := range obras {
-        fmt.Printf("Obra Province Raw: '%s'\n", obra.Province)
-        
-        // Try matching with and without trimming whitespace
-        provinceName := provinces[obra.Province]
-        if provinceName != "" {
-            obrasCount[provinceName]++
-        } else {
-            // Try trimming whitespace
-            trimmedProvince := strings.TrimSpace(obra.Province)
-            for code, name := range provinces {
-                if trimmedProvince == code {
-                    obrasCount[name]++
-                    break
-                }
-            }
-        }
-    }
+  for _, provinceName := range provinces {
+      provinceVotes[provinceName] = 0
+  }
 
-    // Calculate the ratio of obras to votes
-    result := gin.H{}
-    for province, _ := range provinces {
-        provinceName := provinces[province]
-        obrasForProvince := obrasCount[provinceName]
-        votesForProvince := voterCount[provinceName]
-        
-        ratio := 0.0
-        if votesForProvince > 0 {
-            ratio = float64(obrasForProvince) / float64(votesForProvince)
-        }
-        
-        result[provinceName] = gin.H{
-            "votos": votesForProvince,
-            "obras": obrasForProvince,
-            "ratio": ratio,
-        }
-    }
+  var votes []models.MyVote
+  if err := initializers.DB.Where("candidate_id = ?", candidateID).Find(&votes).Error; err != nil {
+      c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve votes"})
+      return
+  }
 
-    c.JSON(http.StatusOK, gin.H{
-        "obra_analysis": result,
-    })
+  for _, vote := range votes {
+      fmt.Printf("Vote Province: %s\n", vote.Province)
+
+      if provinceName, exists := provinces[vote.Province]; exists {
+          provinceVotes[provinceName]++
+          continue
+      }
+
+      // Manejo de códigos de provincia con un dígito
+      provinceCode := vote.Province
+      if len(provinceCode) == 1 {
+          provinceCode = "0" + provinceCode
+      }
+
+      if provinceName, exists := provinces[provinceCode]; exists {
+          provinceVotes[provinceName]++
+      }
+  }
+
+  // Construir el resultado
+  result := make(map[string]gin.H)
+
+  for _, event := range events {
+      provinceName := provinces[event.Province]
+
+      votesBefore := provinceVotes[provinceName] // Votos antes del evento
+      votesAfter := 0                            // Puedes calcular esto según tu lógica específica
+
+      result[provinceName] = gin.H{
+          "votes_before": votesBefore,
+          "votes_after":  votesAfter,
+          "impact_ratio": 0.0, // Calcular según tu lógica
+      }
+  }
+
+  c.JSON(http.StatusOK, gin.H{
+      "candidate_id":    candidateID,
+      "province_votes":  provinceVotes,
+      "province_events": result,
+  })
 }

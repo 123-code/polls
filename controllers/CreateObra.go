@@ -15,6 +15,15 @@ func CreateObra(c *gin.Context) {
         return
     }
 
+    if len(obra.Province) == 1 {
+        obra.Province = "0" + obra.Province
+    }
+
+    if _, exists := provinces[obra.Province]; !exists {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid province code"})
+        return
+    }
+
     if err := initializers.DB.Create(&obra).Error; err != nil {
         c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create obra"})
         return
